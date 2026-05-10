@@ -2,10 +2,10 @@ name: Build & publish container
 
 on:
   push:
-    branches: [main]
+    branches: [main,master]
     tags: ["v*"]
   pull_request:
-    branches: [main]
+    branches: [main,master]
   schedule:
     # Weekly rebuild so the bundled lms/llmster picks up upstream updates.
     - cron: "23 5 * * 1"
@@ -18,7 +18,7 @@ env:
 jobs:
   # Build each architecture on its native runner and push by digest.
   # GitHub provides free linux/arm64 runners (`ubuntu-24.04-arm`) for public
-  # repos — way faster than QEMU emulation.
+  # repos ??? way faster than QEMU emulation.
   build:
     name: Build ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
