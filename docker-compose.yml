@@ -1,6 +1,6 @@
 services:
   lmstudio:
-    image: ghcr.io/CHANGE-ME/lmstudio-container:latest
+    image: ghcr.io/lucathehacker/lmstudio-container:latest
     container_name: lmstudio
     restart: unless-stopped
     ports:

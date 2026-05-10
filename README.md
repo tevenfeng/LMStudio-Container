@@ -25,7 +25,7 @@ docker run -d --name lmstudio \
   -p 1234:1234 \
   -v lmstudio-data:/data \
   --restart unless-stopped \
-  ghcr.io/CHANGE-ME/lmstudio-container:latest
+  ghcr.io/lucathehacker/lmstudio-container:latest
 ```
 
 With NVIDIA GPU:
@@ -36,7 +36,7 @@ docker run -d --name lmstudio \
   -p 1234:1234 \
   -v lmstudio-data:/data \
   --restart unless-stopped \
-  ghcr.io/CHANGE-ME/lmstudio-container:latest
+  ghcr.io/lucathehacker/lmstudio-container:latest
 ```
 
 ### docker compose
@@ -81,7 +81,7 @@ This automatically sets ownership to UID/GID `568` (the `apps` user), which is w
 #### Image Configuration
 | Field | Value |
 | --- | --- |
-| Image repository | `ghcr.io/CHANGE-ME/lmstudio-container` |
+| Image repository | `ghcr.io/lucathehacker/lmstudio-container` |
 | Image tag | `latest` |
 | Image pull policy | `Always` (so weekly rebuilds get picked up on app restart) |
 
