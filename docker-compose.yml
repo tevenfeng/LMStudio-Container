@@ -10,10 +10,6 @@ services:
       # Replace ./data with a host path on a fast disk (NVMe ideally).
       - ./data:/data
     environment:
-      # Match these to the UID/GID that owns ./data on the host.
-      # On TrueNAS SCALE the default "apps" user is 568:568.
-      PUID: "568"
-      PGID: "568"
       LMS_PORT: "1234"
       # Optional: download one or more models on first boot (space-separated).
       # LMS_PREFETCH: "qwen/qwen3-4b"

@@ -11,7 +11,6 @@ Powered by [`llmster`](https://lmstudio.ai/docs/developer/core/headless), LM Stu
 - **Single persistent volume** at `/data` for models, config, and conversation history
 - **NVIDIA GPU** support via the standard NVIDIA Container Toolkit (`--gpus all`)
 - **Multi-arch** images: `linux/amd64` + `linux/arm64`
-- **TrueNAS-friendly** defaults — runs as UID/GID `568` (the SCALE `apps` user), overridable via `PUID`/`PGID`
 - **Self-updating** — weekly automated rebuilds pick up upstream LM Studio releases
 
 ---
@@ -69,7 +68,7 @@ In the TrueNAS UI: **Datasets** → pick a pool → **Add Dataset**.
 - **Name**: `lmstudio` (or whatever you like)
 - **Dataset Preset**: `Apps`
 
-This automatically sets ownership to UID/GID `568` (the `apps` user), which is what the container expects by default. Put it on an SSD/NVMe pool — model files are large and slow disks make first-load painful.
+Put it on an SSD/NVMe pool — model files are large and slow disks make first-load painful. The container runs as `root` inside, so the dataset's owner doesn't need to match any particular UID.
 
 ### 2. Install as a Custom App
 
@@ -90,8 +89,6 @@ Add as needed:
 
 | Name | Example | Purpose |
 | --- | --- | --- |
-| `PUID` | `568` | Match dataset owner. Default is `568`. |
-| `PGID` | `568` | Match dataset group. Default is `568`. |
 | `LMS_PORT` | `1234` | Internal API port (default `1234`). |
 | `LMS_PREFETCH` | `qwen/qwen3-4b` | Optional. Space-separated models to download on first boot. |
 | `LMS_LOAD` | `qwen/qwen3-4b` | Optional. Pre-load this model into memory at startup. |
@@ -165,8 +162,6 @@ Drop-in clients:
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `PUID` | `568` | UID the lms process runs as. Match the owner of your `/data` mount. |
-| `PGID` | `568` | GID the lms process runs as. |
 | `LMS_PORT` | `1234` | Port the API listens on inside the container. |
 | `LMS_SERVER_HOST` | `0.0.0.0` | Bind address. Upstream `lms` defaults to `127.0.0.1`; the container overrides to `0.0.0.0` so the published port is reachable. Don't change unless you know why. |
 | `LMS_PREFETCH` | _(unset)_ | Space-separated list of model slugs to download on startup. |
@@ -226,7 +221,7 @@ On TrueNAS SCALE, the `Always` pull policy plus a manual **Stop** → **Start** 
 The daemon takes ~30–60s on first start while it bootstraps. Check `docker logs lmstudio`. The healthcheck has a 120s grace period for this.
 
 **Permission denied writing to `/data`**
-Your dataset is owned by a different UID than the container. Either re-chown the dataset (`chown -R 568:568 /mnt/tank/lmstudio`) or set `PUID`/`PGID` to whatever owns it.
+The container writes to `/data` as `root`. If your host has restrictive ACLs or SELinux on the mount path, loosen them or pick a path that root can write to. Files inside the volume will be root-owned — that's expected.
 
 **Model downloads fail or hang**
 `lms get` pulls from Hugging Face. Verify the container has outbound HTTPS, and that your model slug is correct (`docker exec lmstudio lms get --help` lists usage).
@@ -259,7 +254,7 @@ docker buildx build --platform linux/amd64,linux/arm64 -t lmstudio-container:dev
 ```
 .
 ├── Dockerfile               # Image definition
-├── entrypoint.sh            # PUID/PGID handling + daemon/server start
+├── entrypoint.sh            # daemon + server startup
 ├── docker-compose.yml       # Reference compose file
 ├── .github/workflows/
 │   └── build.yml            # Multi-arch build & push to GHCR
