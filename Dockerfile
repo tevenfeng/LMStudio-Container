@@ -21,20 +21,18 @@ RUN apt-get update \
         tini \
  && rm -rf /var/lib/apt/lists/*
 
-# Install lms (the LM Studio CLI) and llmster (the headless daemon) into
-# /opt/lmstudio/bin so the persistent /data volume can be mounted without
-# shadowing the binaries. The official installer always writes to
-# $HOME/.lmstudio/bin, so we point HOME at a scratch dir during install
-# and then move the binaries into /opt.
+# Stage a full LM Studio install at /opt/lmstudio-stage. The entrypoint
+# copies this into $HOME/.lmstudio on first boot when the persistent /data
+# volume is empty. We can't install directly into /data (that's the volume
+# mount point — bind-mounting a host path shadows whatever was baked in),
+# but we *do* need the install rooted at $HOME/.lmstudio at runtime: the
+# `lms` CLI hard-codes that layout when it looks up the llmster daemon.
 RUN set -eux; \
-    mkdir -p /opt/lmstudio/bin /tmp/lms-install; \
-    HOME=/tmp/lms-install \
+    mkdir -p /opt/lmstudio-stage; \
+    HOME=/opt/lmstudio-stage \
         sh -c "curl -fsSL https://lmstudio.ai/install.sh | sh -s -- --no-modify-path --quiet"; \
-    cp -a /tmp/lms-install/.lmstudio/bin/. /opt/lmstudio/bin/; \
-    rm -rf /tmp/lms-install; \
-    /opt/lmstudio/bin/lms --version
-
-ENV PATH=/opt/lmstudio/bin:$PATH
+    test -x /opt/lmstudio-stage/.lmstudio/bin/lms; \
+    /opt/lmstudio-stage/.lmstudio/bin/lms --version
 
 # TrueNAS SCALE Apps default to UID/GID 568 ("apps" user). Override with
 # PUID/PGID env vars at runtime to match your dataset ownership.

@@ -19,7 +19,20 @@ if [ "$(id -u)" = "0" ]; then
         useradd -o -u "$PUID" -g "$PGID" -d /data -M -s /bin/bash lmstudio
     fi
 
+    mkdir -p /data/.lmstudio
+
+    # Seed the volume on first boot. The `lms` CLI expects its companion
+    # binaries (llmster, etc.) under $HOME/.lmstudio/bin — that's hard-coded,
+    # not just $PATH. We staged a full install at /opt/lmstudio-stage during
+    # the image build; copy it across only if /data/.lmstudio is empty so we
+    # don't clobber user-installed updates from `lms self-update`.
+    if [ ! -x /data/.lmstudio/bin/lms ]; then
+        log "Seeding /data/.lmstudio from staged install..."
+        cp -a /opt/lmstudio-stage/.lmstudio/. /data/.lmstudio/
+    fi
+
     mkdir -p /data/.lmstudio/models
+
     # Best-effort chown: a host-mounted dataset may already match PUID/PGID
     # (no-op) or may be owned by a different user (fix it). Don't fail the
     # container if the filesystem refuses (e.g. read-only NFS export).
@@ -33,10 +46,10 @@ fi
 # Unprivileged process from here on.
 # ---------------------------------------------------------------------------
 export HOME=/data
-export PATH=/opt/lmstudio/bin:${PATH}
+export PATH=/data/.lmstudio/bin:${PATH}
 
 log "Starting LM Studio headless ($(lms --version 2>/dev/null || echo 'unknown version'))"
-log "HOME=${HOME}  PATH includes /opt/lmstudio/bin"
+log "HOME=${HOME}  PATH includes /data/.lmstudio/bin"
 
 # `lms bootstrap` is idempotent and ensures the CLI can locate its companion
 # binaries. Safe to run on every start.
