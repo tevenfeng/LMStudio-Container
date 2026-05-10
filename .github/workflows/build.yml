@@ -34,13 +34,19 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      image: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
     steps:
       - name: Prepare platform pair
         id: prep
         run: |
           platform="${{ matrix.platform }}"
           echo "platform_pair=${platform//\//-}" >>"$GITHUB_OUTPUT"
+
+      - name: Lowercase image name
+        id: image
+        run: echo "name=${IMAGE_NAME,,}" >>"$GITHUB_OUTPUT"
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
 
       - uses: actions/checkout@v4
 
@@ -50,7 +56,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
 
       - name: Log in to ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
@@ -70,7 +76,7 @@ jobs:
           cache-from: type=gha,scope=${{ steps.prep.outputs.platform_pair }}
           cache-to: type=gha,scope=${{ steps.prep.outputs.platform_pair }},mode=max
           outputs: |
-            type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
+            type=image,name=${{ env.REGISTRY }}/${{ steps.image.outputs.name }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
 
       - name: Export digest
         if: github.event_name != 'pull_request'
@@ -107,11 +113,17 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      - name: Lowercase image name
+        id: image
+        run: echo "name=${IMAGE_NAME,,}" >>"$GITHUB_OUTPUT"
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+
       - name: Image tags
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -135,7 +147,7 @@ jobs:
             $(printf "${REGISTRY}/${IMAGE_NAME}@sha256:%s " *)
         env:
           REGISTRY: ${{ env.REGISTRY }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_NAME: ${{ steps.image.outputs.name }}
 
       - name: Inspect image
         run: |
@@ -143,4 +155,4 @@ jobs:
             "${REGISTRY}/${IMAGE_NAME}:${{ steps.meta.outputs.version }}"
         env:
           REGISTRY: ${{ env.REGISTRY }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_NAME: ${{ steps.image.outputs.name }}
