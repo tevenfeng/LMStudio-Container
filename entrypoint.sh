@@ -65,9 +65,12 @@ for _ in $(seq 1 60); do
     sleep 1
 done
 
-# Start the OpenAI-compatible REST API. CORS is on so web UIs (Open WebUI,
-# LobeChat, etc.) on other origins can talk to it.
-lms server start --port "${LMS_PORT}" --cors
+# Start the OpenAI-compatible REST API. We pass --bind explicitly because
+# `lms server start` defaults to 127.0.0.1, which silently makes the docker
+# port mapping useless. LMS_SERVER_HOST is the upstream-documented env var
+# name for this. CORS is on so web UIs (Open WebUI, LobeChat, etc.) on
+# other origins can talk to it.
+lms server start --port "${LMS_PORT}" --bind "${LMS_SERVER_HOST:-0.0.0.0}" --cors
 
 log "API listening on 0.0.0.0:${LMS_PORT}"
 log "Models directory: ${HOME}/.lmstudio/models"

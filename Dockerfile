@@ -36,10 +36,14 @@ RUN set -eux; \
 
 # TrueNAS SCALE Apps default to UID/GID 568 ("apps" user). Override with
 # PUID/PGID env vars at runtime to match your dataset ownership.
+# LMS_SERVER_HOST is the variable name `lms server start --bind` reads.
+# Default to 0.0.0.0 in-container so the published port is reachable from
+# outside Docker (the upstream `lms` default is 127.0.0.1, which silently
+# breaks `docker run -p` mapping).
 ENV PUID=568 \
     PGID=568 \
     LMS_PORT=1234 \
-    LMS_HOST=0.0.0.0
+    LMS_SERVER_HOST=0.0.0.0
 
 # Models, config, conversations, and the JIT cache all live under /data.
 # Mount a single host dataset here for persistence.

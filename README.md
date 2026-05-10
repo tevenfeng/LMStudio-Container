@@ -168,7 +168,7 @@ Drop-in clients:
 | `PUID` | `568` | UID the lms process runs as. Match the owner of your `/data` mount. |
 | `PGID` | `568` | GID the lms process runs as. |
 | `LMS_PORT` | `1234` | Port the API listens on inside the container. |
-| `LMS_HOST` | `0.0.0.0` | Bind address (informational). |
+| `LMS_SERVER_HOST` | `0.0.0.0` | Bind address. Upstream `lms` defaults to `127.0.0.1`; the container overrides to `0.0.0.0` so the published port is reachable. Don't change unless you know why. |
 | `LMS_PREFETCH` | _(unset)_ | Space-separated list of model slugs to download on startup. |
 | `LMS_LOAD` | _(unset)_ | Single model slug to load into memory at startup (optional). |
 
