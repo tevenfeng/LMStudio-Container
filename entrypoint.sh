@@ -12,9 +12,11 @@ mkdir -p /data/models /data/conversations
 
 log "Starting LM Studio headless ($(lms --version 2>/dev/null || echo 'unknown version'))"
 
-# `lms bootstrap` is idempotent and ensures the CLI can locate its companion
-# binaries. Safe to run on every start.
-lms bootstrap >/dev/null 2>&1 || true
+# NB: do not call `lms bootstrap` here — it's only an interactive helper
+# that writes `export PATH=...` into ~/.profile/~/.bashrc, which we already
+# bake into the image. On amd64 hosts without AVX (or under QEMU) it spins
+# at 99% CPU forever waiting on a TTY prompt that never arrives, hanging
+# the whole entrypoint. We don't need it.
 
 # Start the llmster daemon in the background. Idempotent — if a previous
 # instance is already running this is a no-op.
