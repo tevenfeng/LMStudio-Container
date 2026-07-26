@@ -8,7 +8,8 @@ log() { printf '[lmstudio] %s\n' "$*"; }
 # The image symlinks /root/.lmstudio/{models,conversations} to
 # /data/<subdir>. Make sure the targets exist on first boot — without them
 # `lms` would resolve to dangling symlinks and fail to write.
-mkdir -p /data/models /data/conversations
+mkdir -p /data/models /data/conversations /data/credentials /data/.internal
+touch /data/.internal/lms-key-2 /data/.internal/user-profile.json /data/.internal/lm-link-account-status-cache.json /data/.internal/lm-link-config.json /data/.internal/local-identity.json
 
 log "Starting LM Studio headless ($(lms --version 2>/dev/null || echo 'unknown version'))"
 

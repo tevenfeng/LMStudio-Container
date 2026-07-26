@@ -31,9 +31,16 @@ RUN curl -fsSL https://lmstudio.ai/install.sh | sh -s -- --no-modify-path --quie
 # if that pointer is missing. Putting it on a bind-mounted volume would
 # also break the daemon's unix socket on NFS/SMB hosts.
 RUN cd /root/.lmstudio \
- && rm -rf models conversations \
- && ln -s /data/models models \
- && ln -s /data/conversations conversations
+ && rm -rf models conversations credentials \
+ && rm -f .internal/lms-key-2 .internal/user-profile.json .internal/lm-link-account-status-cache.json .internal/lm-link-config.json .internal/local-identity.json \
+ && ln -sf /data/models models \
+ && ln -sf /data/conversations conversations \
+ && ln -sf /data/credentials credentials \
+ && ln -sf /data/.internal/lms-key-2 .internal/lms-key-2 \
+ && ln -sf /data/.internal/user-profile.json .internal/user-profile.json \
+ && ln -sf /data/.internal/lm-link-account-status-cache.json .internal/lm-link-account-status-cache.json \
+ && ln -sf /data/.internal/lm-link-config.json .internal/lm-link-config.json \
+ && ln -sf /data/.internal/local-identity.json .internal/local-identity.json
 
 # LMS_SERVER_HOST is the variable name `lms server start --bind` reads.
 # Default to 0.0.0.0 in-container so the published port is reachable from
