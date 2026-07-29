@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM debian:bookworm-slim
 
 ARG TARGETARCH
 ARG TARGETOS
@@ -22,7 +22,11 @@ RUN apt-get update \
 # default $HOME=/root, so files land at /root/.lmstudio — the installer's
 # standard layout, no path tricks.
 RUN curl -fsSL https://lmstudio.ai/install.sh | sh -s -- --no-modify-path --quiet \
- && /root/.lmstudio/bin/lms --version
+ && /root/.lmstudio/bin/lms --version \
+ && rm -rf /root/.lmstudio/.session_cache/ \
+             /root/.lmstudio/server-logs/ \
+ && find /root/.lmstudio/extensions/backends/vendor/_amphibian/ \
+        -maxdepth 1 -type d -name 'app-mlx-*' -exec rm -rf {} + 2>/dev/null || true
 
 # Point the heavy/user-owned dirs at /data so they survive image rebuilds.
 # We deliberately keep .internal/ in the image: the installer drops
