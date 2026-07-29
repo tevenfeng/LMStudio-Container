@@ -10,11 +10,6 @@ on:
     # Weekly rebuild so the bundled lms/llmster picks up upstream updates.
     - cron: "23 5 * * 1"
   workflow_dispatch:
-    inputs:
-      no-cache:
-        description: 'Disable Docker build cache (rebuild all layers from scratch)'
-        type: boolean
-        default: true
 
 env:
   REGISTRY: ghcr.io
@@ -41,12 +36,6 @@ jobs:
     outputs:
       image: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}
     steps:
-      - name: Prepare platform pair
-        id: prep
-        run: |
-          platform="${{ matrix.platform }}"
-          echo "platform_pair=${platform//\//-}" >>"$GITHUB_OUTPUT"
-
       - name: Lowercase image name
         id: image
         run: echo "name=${IMAGE_NAME,,}" >>"$GITHUB_OUTPUT"
@@ -71,15 +60,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine cache strategy
-        id: cache
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.no-cache }}" = "true" ]; then
-            echo "no_cache=true" >>"$GITHUB_OUTPUT"
-          else
-            echo "no_cache=false" >>"$GITHUB_OUTPUT"
-          fi
-
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@v6
@@ -87,9 +67,7 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          no-cache: ${{ steps.cache.outputs.no_cache }}
-          cache-from: ${{ steps.cache.outputs.no_cache == 'false' && format('type=gha,scope={0}', steps.prep.outputs.platform_pair) || '' }}
-          cache-to: ${{ steps.cache.outputs.no_cache == 'false' && format('type=gha,scope={0},mode=max', steps.prep.outputs.platform_pair) || '' }}
+          no-cache: true
           outputs: |
             type=image,name=${{ env.REGISTRY }}/${{ steps.image.outputs.name }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
 
